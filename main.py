@@ -19,11 +19,25 @@ def get_video_info():
                 'itag': stream.itag,
                 'resolution': stream.resolution,
                 'mime_type': stream.mime_type,
+                'fps': stream.fps,
                 'abr': stream.abr,
-                'filesize': stream.filesize
+                'filesize': stream.filesize,
+                'is_progressive': stream.is_progressive
             }
-            for stream in yt.streams.filter(progressive=True)
+            for stream in yt.streams.filter(progressive=True).order_by('resolution').desc()
         ]
+        # Adicionar streams adaptativas (apenas vídeo)
+        streams.extend([
+            {
+                'itag': stream.itag,
+                'resolution': stream.resolution,
+                'mime_type': stream.mime_type,
+                'fps': stream.fps,
+                'filesize': 'N/A',  # Tamanho não disponível para streams adaptativas
+                'is_progressive': False
+            }
+            for stream in yt.streams.filter(adaptive=True, only_video=True).order_by('resolution').desc()
+        ])
         return jsonify({'streams': streams})
     except Exception as e:
         return jsonify({'error': str(e)}), 400
